@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Treeline V1 — UX Design Roadmap (weekly)</title>
+<title>Treeline V1 — UX Design Roadmap</title>
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-  :root{--bg:#0f1117;--surface:#151720;--panel-bg:#181c28;--border:#252838;--text:#e4e6ed;--text-muted:#7b7f95;--text-dim:#555872;--green:#34d399;--blue:#60a5fa;--purple:#a78bfa;--rose:#fb7185;--amber:#fbbf24;--teal:#2dd4bf;--px-per-day:10;--label-w:160px;--bar-h:34px;--bar-gap:28px;--row-pad:16px}
+  :root{--bg:#0f1117;--surface:#151720;--panel-bg:#181c28;--border:#252838;--text:#e4e6ed;--text-muted:#7b7f95;--text-dim:#555872;--green:#34d399;--blue:#60a5fa;--purple:#a78bfa;--rose:#fb7185;--amber:#fbbf24;--teal:#2dd4bf;--px-per-day:5.5;--label-w:160px;--bar-h:50px;--bar-gap:28px;--row-pad:16px}
   *{margin:0;padding:0;box-sizing:border-box}
   body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.5}
   .header{text-align:center;padding:28px 24px 20px}
@@ -26,8 +26,23 @@
   .legend-bar.active{background:var(--blue)}
   .legend-bar.upcoming{background:var(--text-dim);opacity:.5}
   .legend-arrow{width:20px;height:0;border-top:1.5px dashed var(--text-dim)}
-  .detail-panel{margin:8px 16px 16px;background:var(--panel-bg);border:1px solid var(--border);border-radius:12px;padding:0;max-height:0;overflow:hidden;transition:max-height .3s ease,padding .3s ease,opacity .3s ease;opacity:0;position:relative}
-  .detail-panel.open{max-height:70vh;padding:20px 24px;opacity:1;overflow-y:auto}
+  .lane-filter{display:flex;gap:8px;padding:0 24px 12px;flex-wrap:wrap}
+  .lane-filter-pill{padding:6px 14px;border-radius:14px;font-size:11px;font-weight:600;background:rgba(255,255,255,.04);color:var(--text-dim);border:1px solid var(--border);cursor:pointer;transition:all .15s;font-family:inherit}
+  .lane-filter-pill:hover{color:var(--text);border-color:var(--text-muted)}
+  .lane-filter-pill.active{background:rgba(255,255,255,.08);color:var(--text);border-color:var(--text-muted)}
+  .lane-filter-pill.product.active{color:var(--purple);border-color:var(--purple);background:rgba(167,139,250,.12)}
+  .lane-filter-pill.eng.active{color:var(--blue);border-color:var(--blue);background:rgba(96,165,250,.12)}
+  .lane-filter-pill.design.active{color:var(--rose);border-color:var(--rose);background:rgba(251,113,133,.12)}
+  .lane-filter-pill.business.active{color:var(--amber);border-color:var(--amber);background:rgba(251,191,36,.12)}
+  .gantt[data-active-filter="product"] .lane:not([data-lane="product"]),
+  .gantt[data-active-filter="eng"] .lane:not([data-lane="eng"]),
+  .gantt[data-active-filter="design"] .lane:not([data-lane="design"]),
+  .gantt[data-active-filter="business"] .lane:not([data-lane="business"]){display:none}
+  .gantt[data-active-filter] .dep-svg{display:none}
+  .detail-panel{position:absolute;top:var(--panel-top,16px);left:0;width:560px;height:var(--panel-height,calc(100vh - 32px));background:var(--panel-bg);border:1px solid var(--border);border-radius:12px;margin-left:16px;padding:20px 24px;display:flex;flex-direction:column;transform:translateX(calc(-100% - 32px));transition:transform .3s ease;z-index:100;box-shadow:4px 0 24px rgba(0,0,0,.4)}
+  .detail-panel.open{transform:translateX(0)}
+  body.detail-open .week-breakdown{margin-left:592px;transition:margin-left .3s ease}
+  .week-breakdown{transition:margin-left .3s ease;max-width:1000px}
   .detail-top{display:flex;align-items:flex-start;justify-content:space-between;gap:16px}
   .detail-title{font-size:18px;font-weight:700;margin-bottom:4px}
   .detail-dates{font-size:12px;color:var(--text-muted);margin-bottom:8px;display:flex;align-items:center;gap:6px}
@@ -39,10 +54,13 @@
   .detail-status.done{background:rgba(52,211,153,.15);color:var(--green)}
   .detail-status.active{background:rgba(96,165,250,.15);color:var(--blue)}
   .detail-status.upcoming{background:rgba(85,88,114,.2);color:var(--text-muted)}
-  .detail-desc{font-size:13px;color:var(--text-muted);line-height:1.6;margin-bottom:10px}
+  .detail-desc{font-size:15px;color:var(--text);line-height:1.6;margin-bottom:10px;flex:1;min-height:0;overflow-y:auto}
+  .detail-desc ul{padding-left:20px;margin:0;list-style:disc}
+  .detail-desc li{margin-bottom:8px;color:var(--text-muted)}
+  .detail-desc li::marker{color:var(--text-dim)}
   .detail-deps{font-size:11px;color:var(--text-dim)}
   .detail-deps strong{color:var(--text-muted)}
-  .dep-selector{margin-top:10px}
+  .dep-selector{margin-top:6px}
   .dep-selector-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px}
   .dep-dropdown-wrap{position:relative}
   .dep-dropdown-trigger{width:100%;padding:7px 12px;background:rgba(0,0,0,.25);border:1px solid var(--border);border-radius:8px;color:var(--text-muted);font-size:11px;font-family:'Inter',sans-serif;cursor:pointer;display:flex;align-items:center;justify-content:space-between;transition:border-color .15s}
@@ -60,10 +78,10 @@
   .dep-dropdown-item:hover{background:rgba(255,255,255,.05);color:var(--text)}
   .dep-dropdown-item .check{width:14px;height:14px;border-radius:3px;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0;transition:all .15s}
   .dep-dropdown-item.selected .check{background:var(--amber);border-color:var(--amber);color:#0f1117}
-  .dep-save-btn{margin-top:8px;padding:5px 16px;border-radius:6px;font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--green),var(--blue));color:#0f1117;border:none;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s}
-  .dep-save-btn.visible{opacity:1;pointer-events:auto}
+  .dep-save-btn{display:none;margin-top:6px;padding:5px 16px;border-radius:6px;font-size:11px;font-weight:700;background:linear-gradient(135deg,var(--green),var(--blue));color:#0f1117;border:none;cursor:pointer}
+  .dep-save-btn.visible{display:inline-block}
   .dep-save-btn:hover{filter:brightness(1.1)}
-  .tag-section{margin-top:10px}
+  .tag-section{margin-top:6px}
   .tag-section-label{font-size:11px;font-weight:600;color:var(--text-muted);margin-bottom:6px}
   .tag-list{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:6px}
   .tag{padding:2px 8px;border-radius:10px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px;cursor:default;display:flex;align-items:center;gap:4px}
@@ -90,6 +108,8 @@
   .audience-btn.active-team{border-color:#60a5fa;background:rgba(96,165,250,.15);color:#60a5fa}
   .audience-btn.active-both{border-color:#34d399;background:rgba(52,211,153,.15);color:#34d399}
   .detail-images{display:flex;gap:10px;margin-top:12px;overflow-x:auto;padding-bottom:6px;scroll-snap-type:x mandatory}
+  .detail-images:empty{display:none}
+  .detail-snippets:empty{display:none}
   .detail-images::-webkit-scrollbar{height:4px}
   .detail-images::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
   .detail-img-card{flex-shrink:0;scroll-snap-align:start;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 2px 12px rgba(0,0,0,.3);cursor:pointer;transition:transform .15s}
@@ -110,7 +130,7 @@
   .lightbox-close:hover{opacity:1}
   .detail-close{position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text-dim);cursor:pointer;font-size:18px;line-height:1;padding:4px}
   .detail-close:hover{color:var(--text)}
-  .detail-actions{display:flex;gap:8px;margin-top:12px;padding-top:10px;border-top:1px solid var(--border);align-items:center}
+  .detail-actions{display:flex;gap:8px;margin-top:8px;padding-top:8px;border-top:1px solid var(--border);align-items:center}
   .detail-move-btn{padding:5px 14px;border-radius:6px;font-size:10px;font-weight:700;background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.3);color:var(--green);cursor:pointer;transition:all .15s;text-transform:uppercase;letter-spacing:.5px;display:none}
   .detail-move-btn:hover{background:rgba(52,211,153,.25);border-color:var(--green)}
   .detail-move-btn.show{display:inline-block}
@@ -168,7 +188,8 @@
   .now-line{position:absolute;top:0;bottom:0;width:2px;background:var(--amber);z-index:5;box-shadow:0 0 8px rgba(251,191,36,.4);pointer-events:none}
   .now-line::before{content:'';position:absolute;top:-1px;left:-4px;width:10px;height:10px;background:var(--amber);border-radius:50%;box-shadow:0 0 10px rgba(251,191,36,.5)}
   .bar-group{position:absolute;z-index:2}
-  .bar{height:var(--bar-h);border-radius:6px;display:flex;align-items:center;padding:0 10px;font-size:11px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;transition:filter .15s,transform .15s}
+  .bar{height:var(--bar-h);border-radius:6px;display:flex;align-items:center;padding:6px 10px;font-size:11px;font-weight:600;line-height:1.25;cursor:pointer;transition:filter .15s,transform .15s;overflow:hidden}
+  .bar-text{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;width:100%}
   .bar:hover{filter:brightness(1.25);transform:scaleY(1.06);z-index:6}
   .bar.selected{filter:brightness(1.3);transform:scaleY(1.1);z-index:7;box-shadow:0 0 16px rgba(255,255,255,.1)}
   .bar-dates{display:flex;justify-content:space-between;padding:2px 2px 0;font-size:9px;color:var(--text-dim);font-weight:500;pointer-events:none}
@@ -184,8 +205,8 @@
   .bar.upcoming{opacity:.35}
   .bar.selected.done,.bar.selected.active,.bar.selected.upcoming{opacity:1}
   .dep-svg{position:absolute;top:0;left:0;pointer-events:none;z-index:3;overflow:visible}
-  .dep-svg path{fill:none;stroke:var(--text-dim);stroke-width:1.5;stroke-dasharray:5 3;marker-end:url(#arrowhead)}
-  .dep-svg path.highlight{stroke:var(--amber);stroke-width:2;stroke-dasharray:none}
+  .dep-svg path{fill:none;stroke:var(--text-dim);stroke-width:1.5;stroke-dasharray:5 3;marker-end:url(#arrowhead);opacity:.18;transition:opacity .15s}
+  .dep-svg path.highlight{stroke:var(--amber);stroke-width:2;stroke-dasharray:none;opacity:1}
   .scroll-hint{text-align:center;font-size:11px;color:var(--text-dim);padding:10px}
   .on-deck{margin:8px 16px 24px}
   .on-deck-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 4px}
@@ -312,6 +333,24 @@
   <img id="lightboxImg" src="" alt="">
 </div>
 
+<div class="week-breakdown" id="weekBreakdown">
+  <div class="wb-header">
+    <span class="wb-icon">📅</span>
+    <span class="wb-title">Weekly priorities</span>
+    <span class="wb-subtitle">What to focus on each week</span>
+  </div>
+  <div class="wb-nav" id="wbNav"></div>
+  <div class="wb-card-area" id="wbCardArea"></div>
+</div>
+
+<div class="lane-filter">
+  <button class="lane-filter-pill active" data-filter="all" onclick="filterLane('all')">All lanes</button>
+  <button class="lane-filter-pill product" data-filter="product" onclick="filterLane('product')">🔮 Product &amp; Research</button>
+  <button class="lane-filter-pill eng" data-filter="eng" onclick="filterLane('eng')">💻 Engineer Collabs</button>
+  <button class="lane-filter-pill design" data-filter="design" onclick="filterLane('design')">🎨 UX Design</button>
+  <button class="lane-filter-pill business" data-filter="business" onclick="filterLane('business')">🛠 Resources &amp; Tools</button>
+</div>
+
 <div class="gantt-wrapper">
   <div class="gantt" id="gantt">
     <div class="month-headers">
@@ -387,22 +426,12 @@
   <div class="on-deck-grid" id="onDeckGrid"></div>
 </div>
 
-<div class="week-breakdown" id="weekBreakdown">
-  <div class="wb-header">
-    <span class="wb-icon">📅</span>
-    <span class="wb-title">Weekly priorities</span>
-    <span class="wb-subtitle">What to focus on each week</span>
-  </div>
-  <div class="wb-nav" id="wbNav"></div>
-  <div class="wb-card-area" id="wbCardArea"></div>
-</div>
-
 <script>
 const TIMELINE_START = new Date(2026,3,21);
 const TODAY          = new Date();
 const TIMELINE_END   = new Date(2026,7,17);
 const GRID_END       = new Date(2026,9,1);
-const PX_PER_DAY     = 10;
+const PX_PER_DAY     = 24;
 
 const PHASE_MAP = {
   '2026-04':'Phase 1: Discovery',
@@ -418,24 +447,21 @@ const LANES = [
   {id:'design',   label:'UX Design',            icon:'🎨', css:'lane-design'},
   {id:'business', label:'Resources\n& Tools',   icon:'🛠️',  css:'lane-business'},
   {id:'milestone',label:'Milestones\n& Gates',  icon:'🏔', css:'lane-milestone'},
+  {id:'claire',   label:'Clare\nReviews',       icon:'👁', css:'lane-claire'},
 ];
 
 const ITEMS = [
   // ── PRODUCT & RESEARCH ──
-  {id:'spec-audit',lane:'product',row:0,start:'2026-04-21',end:'2026-04-28',title:'Deep spec audit & annotation',status:'active',
-   desc:'Read the full Treeline V1 spec end-to-end. Annotate gaps, edge cases, and open UX questions. Map every spec section to an expected screen or interaction. Flag the complex flows needing CEO alignment: conditioning end conditions, blended pace projection, leaf-node rule, psychological states, Waypoints, and tiered time distribution.',deps:[]},
-  {id:'tmo-study',lane:'product',row:1,start:'2026-04-21',end:'2026-04-28',title:'Study TMO benchmark app',status:'active',
-   desc:'Download and study TMO (App Store award winner), specifically assigned by Chris on April 16 as the design benchmark. Use it with the lens of: navigation patterns, how complexity is hidden progressively, ease of use, and interaction polish. This is the bar Gage set — "what gets an app to award-winning status is not the concept, but the execution and ease of use."',deps:[]},
-  {id:'discovery-folder',lane:'product',row:2,start:'2026-04-21',end:'2026-04-25',title:'Skim Discovery folder (competitive research)',status:'active',
-   desc:'Skim — not deep-read — the Google Drive Discovery folder: competitive research and early screens. Reference only. Chris assigned this April 16 alongside the spec read. Goal: get a sense of what was already explored so you don\'t repeat it. Do not spend more than 2–3 hours here.',deps:[]},
-  {id:'screen-inventory',lane:'product',row:0,start:'2026-05-05',end:'2026-05-12',title:'Master screen inventory',status:'upcoming',
-   desc:'Build a master list of all V1 screens (~50+ estimated). Map each to its spec section (Sections 1–9). Identify which are net-new vs already in the engineer\'s prototype. Get CEO sign-off on scope before wireframes begin. This gates all downstream work.',deps:['spec-audit']},
-  {id:'user-flows',lane:'product',row:1,start:'2026-05-05',end:'2026-05-12',title:'3 user flow maps (Skill Builder / Structure Seeker / Capacity Planner)',status:'upcoming',
-   desc:'Define end-to-end flows for all three user types from the spec. Focus on divergence points — where each type uses the same screens differently. Skill Builder: practice → Compass → Focus Mode → Reflect. Capacity Planner: goal setup → Expedition → traffic light → sprint planning. These flows drive wireframe sequencing.',deps:['spec-audit']},
-  {id:'naming-resolution',lane:'product',row:2,start:'2026-05-05',end:'2026-05-12',title:'Hierarchy naming resolution (Cairns, Miles/Markers)',status:'upcoming',
-   desc:'Gage had a strong negative reaction to "Cairn" on April 16 — called it the biggest problem he couldn\'t get past. Clare proposed collapsing the hierarchy to three terms: Miles / Markers / Mountains (April 14 call). Both proposals need to be evaluated before wireframes begin — naming is baked into every screen. Prepare 2–3 alternatives with rationale and bring to CEO for sign-off.',deps:['spec-audit']},
-  {id:'ceo-scope',lane:'product',row:0,start:'2026-05-12',end:'2026-05-16',title:'CEO: scope & V1 alignment session',status:'upcoming',
-   desc:'CEO alignment session: confirm V1 scope, validate user priority order (Skill Builder first), decide on hierarchy naming (Cairn rename, Clare\'s Miles/Markers proposal), confirm V2 deferrals (spaced repetition, mastery labels, multi-step Pomodoro, auto-dependency detection). This session gates all wireframe work.',deps:['screen-inventory','user-flows','naming-resolution']},
+  {id:'spec-audit-gaps',lane:'product',row:0,start:'2026-04-21',end:'2026-05-08',title:'Spec audit + resolve open questions',status:'active',
+   desc:'Two-phase work with an internal checkpoint at Apr 28. Phase 1 (Apr 21–28): deep spec audit & annotation. Read the full Treeline V1 spec end-to-end. Annotate gaps, edge cases, and open UX questions. Map every spec section to an expected screen or interaction. Flag the complex flows needing CEO alignment: conditioning end conditions, blended pace projection, leaf-node rule, psychological states, Waypoints, tiered time distribution. Internal checkpoint (Apr 28): full spec read complete + gap list compiled with examples. Downstream work that depends only on the audit (screen inventory, user flows, naming resolution) can begin in parallel from this checkpoint while Phase 2 continues. Phase 2 (Apr 28–May 8): answer 8 open UX questions in open_questions.md — hard vs. soft deadline UI treatment, dismiss behavior on trail work, planning nudge format (the Sunday prompt), Summit Fever + TreeLine prompt repetition and dismissal logic, Fog exit conditions beyond logging time. Work through each gap, propose a resolution with rationale, bring the full set to the CEO scope session. Required deliverable: 8 written resolutions (not optional). Spec is considered incomplete until these are closed.',deps:[]},
+  {id:'competitive-study',lane:'product',row:1,start:'2026-04-21',end:'2026-04-28',title:'Competitive study (TMO benchmark + 5–8 adjacent apps)',status:'active',
+   desc:'Headline benchmark — TMO (App Store award winner), specifically assigned by Chris on April 16. Study deeper than the rest with the lens of: navigation patterns, how complexity is hidden progressively, ease of use, and interaction polish. This is the bar Gage set — "what gets an app to award-winning status is not the concept, but the execution and ease of use." Then 5–8 adjacent apps across three categories: habit trackers (Finch, Habitica, Streaks), goal planners (Structured, Waymap, Longwalks, Dreamfora), time trackers (Toggl, Timestripe, Motion). For each: navigation model, complexity handling, time tracking UX, onboarding flow, what they do well, where they fall short. Directly informs V1 decisions — especially navigation concept, Compass, and timer interactions. Gage already flagged chess.com\'s AI layer as a relevant model.',deps:[]},
+  {id:'ceo-scope-prep',lane:'product',row:0,start:'2026-04-28',end:'2026-05-05',title:'CEO scope prep: screen inventory + naming',status:'upcoming',
+   desc:'Two parallel deliverables prepared for the CEO scope alignment session — both gate ceo-scope, both run in parallel through the same week. Deliverable 1: master screen inventory. Build a list of all V1 screens (~50+ estimated). Map each to its spec section (Sections 1–9). Identify which are net-new vs already in the engineer\'s prototype. Used to confirm V1 scope at the CEO session. Deliverable 2: hierarchy naming resolution. Gage had a strong negative reaction to "Cairn" on April 16 — called it the biggest problem he couldn\'t get past. Clare proposed collapsing the hierarchy to three terms: Miles / Markers / Mountains (April 14 call). Both proposals need to be evaluated before wireframes begin — naming is baked into every screen. Prepare 2–3 naming alternatives with rationale. Both deliverables are required (not optional) — the CEO scope session can\'t happen without them.',deps:['spec-audit-gaps']},
+  {id:'user-flows',lane:'product',row:1,start:'2026-04-28',end:'2026-05-22',title:'Map user flows (per-persona + per-task)',status:'upcoming',
+   desc:'Document end-to-end flows along two axes. Per-persona: define how each of the 3 user types uses the product differently, focusing on divergence points — Skill Builder (practice → Compass → Focus Mode → Reflect), Structure Seeker, and Capacity Planner (goal setup → Expedition → traffic light → sprint planning). Per-task: step out the 5 highest-frequency flows in full detail — (1) first-time onboarding → first mountain created, (2) daily Compass triage → start timer → log time → complete step, (3) add peak to Expedition → commit hours, (4) complete a step → advance hiker, (5) check Reflect → review week. Each task flow gets a step-by-step screen sequence with decision branches. Together these drive all wireframe sequencing.',deps:['spec-audit-gaps']},
+  {id:'ceo-scope',lane:'product',row:0,start:'2026-05-05',end:'2026-05-08',title:'CEO: scope & V1 alignment session',status:'upcoming',
+   desc:'CEO alignment session: confirm V1 scope, validate user priority order (Skill Builder first), decide on hierarchy naming (Cairn rename, Clare\'s Miles/Markers proposal), confirm V2 deferrals (spaced repetition, mastery labels, multi-step Pomodoro, auto-dependency detection). This session gates all wireframe work.',deps:['ceo-scope-prep','user-flows']},
   {id:'ceo-wf-review',lane:'product',row:0,start:'2026-05-26',end:'2026-05-29',title:'CEO: core wireframe review',status:'upcoming',
    desc:'CEO review of all core hierarchy wireframes — Camp/Maps, Pack/Expedition, Hike/Compass. Align on navigation structure, sequencing logic, and the ordering/progression model (sequential mode, parallel flag, skip behavior). Incorporate feedback before Phase 3 feature design begins.',deps:['ceo-scope']},
   {id:'ceo-feature-review',lane:'product',row:1,start:'2026-06-30',end:'2026-07-03',title:'CEO: feature design review',status:'upcoming',
@@ -446,14 +472,12 @@ const ITEMS = [
    desc:'Synthesize findings from usability sessions into three buckets: Critical (block V1 handoff), Important (V1 if time allows), Backlog (V2). Focus fix priority on Compass triage flow, Expedition commitment, and timer interactions — the highest-frequency daily flows.',deps:['ceo-hifi-review']},
 
   // ── ENGINEER COLLABS ──
-  {id:'proto-audit',lane:'eng',row:0,start:'2026-04-21',end:'2026-04-28',title:'Prototype audit with engineer',status:'active',
-   desc:'Walk through the existing systems prototype screen-by-screen with the engineer. Map each screen to the V1 spec. Note what\'s accurate, what conflicts with spec, and what\'s missing. This audit informs the screen inventory and prevents duplicated effort in the design phase.',deps:[]},
-  {id:'slawek-friday-calls',lane:'eng',row:1,start:'2026-04-24',end:'2026-08-14',title:'Weekly Friday calls with Slawek (1.5 hrs)',status:'active',
-   desc:'Assigned April 16: Join Slawek\'s Friday morning call (9–10:30 AM) for the full 1.5 hours each week. Slawek is building the prototype from the spec in Poland — you need to know what\'s implemented, where he\'s running into ambiguities, and what decisions need to be made. This is an ongoing commitment, not a one-off.',deps:[]},
-  {id:'ceo-proto-approval',lane:'eng',row:0,start:'2026-04-24',end:'2026-04-28',title:'CEO: systems prototype review & approval',status:'active',
-   desc:'Present Slawek\'s systems prototype to Chris for review THIS WEEK. Walk through every screen together — Camp, Pack, Hike. Chris flags: (1) what\'s approved and accurate to spec, (2) what needs correcting, (3) what flows are entirely missing. This produces the gap list that drives next week\'s Claude iteration sprint. Nothing is built out further until Chris has seen the current state.',deps:['proto-audit']},
-  {id:'claude-proto-build',lane:'eng',row:0,start:'2026-04-28',end:'2026-06-09',title:'⚡ Prototype sprint: Claude edits to feature-complete',status:'active',
-   desc:'Use Claude to extend and edit Slawek\'s systems prototype until all V1 functionality exists. The loop: identify missing screen or flow → Claude generates it → review against spec → iterate. Target flows to build out: full onboarding (both top-down and bottom-up paths), Expedition commit flow, Compass daily triage, Focus Mode timer, Reflect dashboard, all psychological state prompts (TreeLine / Summit Fever / Fog), and Waypoints celebration. This is not a redesign — it\'s making the prototype complete so it can be a live reference while Figma wireframes are being built. The two workstreams run in parallel and inform each other.',deps:['ceo-proto-approval']},
+  {id:'proto-audit-ceo',lane:'eng',row:0,start:'2026-04-21',end:'2026-05-05',title:'Audit prototype + CEO approval',status:'active',
+   desc:'Two-phase work with an internal checkpoint at Apr 28. Phase 1 (Apr 21–28): audit Slawek\'s systems prototype with the engineer screen-by-screen. Map each screen to the V1 spec. Note what\'s accurate, what conflicts with spec, and what\'s missing. Audit findings inform the screen inventory and prevent duplicated effort in the design phase. Internal checkpoint (Apr 28): audit findings ready — gap list compiled with examples. Phase 2 (Apr 28–May 5): CEO walkthrough with Chris. Walk through every screen together — Camp, Pack, Hike. Chris flags: (1) what\'s approved and accurate to spec, (2) what needs correcting, (3) what flows are entirely missing. Produces a clear gap list that drives the Claude iteration sessions. Nothing is built out further until Chris has seen the current state.',deps:[]},
+  {id:'slawek-friday-calls',lane:'eng',row:1,start:'2026-04-24',end:'2026-08-14',title:'Weekly Friday calls with Slawek (15 min)',status:'active',
+   desc:'Assigned April 16: join Slawek\'s Friday morning call (9–10:30 AM) for the first 15 minutes each week. Slawek is building the prototype from the spec in Poland — you need to know what\'s implemented, where he\'s running into ambiguities, and what decisions need to be made. This is an ongoing commitment, not a one-off.',deps:[]},
+  {id:'claude-proto-build',lane:'eng',row:0,start:'2026-05-05',end:'2026-06-15',title:'Claude: iterate prototype to feature-complete',status:'upcoming',
+   desc:'Use Claude to extend and edit Slawek\'s systems prototype until all V1 functionality exists. The loop: identify missing screen or flow → Claude generates it → review against spec → iterate. Target flows to build out: full onboarding (both top-down and bottom-up paths), Expedition commit flow, Compass daily triage, Focus Mode timer, Reflect dashboard, all psychological state prompts (TreeLine / Summit Fever / Fog), and Waypoints celebration. This is not a redesign — it\'s making the prototype complete so it can be a live reference while Figma wireframes are being built. The two workstreams run in parallel and inform each other.',deps:['proto-audit-ceo']},
   {id:'eng-spec-conflicts',lane:'eng',row:1,start:'2026-05-19',end:'2026-05-23',title:'Engineer sync: resolve spec conflicts',status:'upcoming',
    desc:'Structured sync after core hierarchy wireframes are complete. Walk through every place the Claude-iterated prototype diverges from the wireframes. Agree on direction and document decisions. Key focus: ordering/progression model (sequential mode, parallel flag), two-tier Expedition layout, and Compass logic.',deps:['claude-proto-build']},
   {id:'eng-conditioning',lane:'eng',row:0,start:'2026-06-09',end:'2026-06-13',title:'Engineer sync: conditioning & streak logic',status:'upcoming',
@@ -468,20 +492,14 @@ const ITEMS = [
    desc:'Final sync before project close. Walk through the complete Figma file. Answer engineering implementation questions on complex interactions (conditioning end conditions, blended projection, tiered time distribution, decay cascade rules). Confirm Dev Mode access and asset export paths.',deps:['proto-edit-pack-hike','usability-synthesis']},
 
   // ── UX DESIGN ──
-  {id:'paper-discovery',lane:'design',row:0,start:'2026-04-21',end:'2026-05-08',title:'Paper phase: user journey traces & sketches',status:'active',
-   desc:'Chris explicitly said: first month is pen-and-paper, no Figma. Work through design on paper before touching any digital tool. Covers: (1) Trace the top-down user journey — onboard → create mountain → add peaks/cairns → Basecamp → Expedition → Compass → log time → Reflect. (2) Trace the bottom-up user journey — open timer, log time, system builds structure. (3) Sketch the onboarding persona picker flow (Gage\'s idea: Skill Builder / Structure Seeker / Capacity Planner). (4) Annotate with questions for the CEO.',deps:[]},
-  {id:'paper-nav',lane:'design',row:1,start:'2026-05-05',end:'2026-05-15',title:'Paper phase: navigation concept sketches',status:'upcoming',
-   desc:'Sketch 2–3 navigation concepts on paper before committing to anything digital. Chris envisions an innovative spinning circle interface rather than standard horizontal tabs (April 16 call). Sketch: (1) Spinning circle, (2) Bottom tab bar (Camp/Pack/Hike), (3) One alternative. The spinning circle is the highest-visibility UX decision in the app. Bring options to the CEO alignment session.',deps:['paper-discovery']},
-  {id:'paper-mountain-viz',lane:'design',row:2,start:'2026-05-05',end:'2026-05-15',title:'Paper phase: mountain progress visualization',status:'upcoming',
-   desc:'Clare flagged the absence of a graphic that makes the user feel like they moved the needle (April 14 call). Gage described it as essential for dopamine and engagement. Sketch what "you are here on the mountain" could look like on mobile: the hiker, elevation-style progress, topographic view, etc. Does not need to be final — Gage handles motion and 3D later in Phase 4.',deps:['paper-discovery']},
-  {id:'figma-setup',lane:'design',row:0,start:'2026-05-12',end:'2026-05-19',title:'Figma workspace & design system setup',status:'upcoming',
+  {id:'paper-phase',lane:'design',row:0,start:'2026-04-21',end:'2026-05-08',title:'Paper phase: journeys + nav + mountain viz',status:'active',
+   desc:'Three-deliverable paper-only block. Chris\'s Apr 16 guidance: "first month is pen-and-paper, no Figma." All three deliverables are required — sketches happen across the full period and later ones will surface questions that send you back to earlier ones. Internal checkpoint (Apr 28): journey traces complete — Phase 2 (nav) and Phase 3 (mountain viz) begin in parallel. Phase 1 (Apr 21–28): user journey traces. Trace the top-down journey (onboard → create mountain → add peaks/cairns → Basecamp → Expedition → Compass → log time → Reflect) and the bottom-up journey (timer-first → system builds structure). Sketch the onboarding persona picker (Gage\'s idea: Skill Builder / Structure Seeker / Capacity Planner). Annotate with CEO questions. Phase 2 (Apr 28–May 8): 2–3 navigation concept sketches — spinning circle (Chris\'s idea), bottom tab bar (Camp/Pack/Hike), one alternative. The spinning circle is the highest-visibility UX decision in the app. Bring options to the CEO scope session. Phase 3 (Apr 28–May 8): mountain progress visualization — addresses Clare\'s "moved the needle" gap (Apr 14) and Gage\'s dopamine concern. Sketch "you are here on the mountain" for mobile: hiker, elevation-style, topographic view. Does not need to be final — Gage handles motion + 3D in Phase 4. Final checkpoint (May 8): all 3 deliverables ready for CEO scope session and Clare structural review.',deps:[]},
+  {id:'figma-setup',lane:'design',row:0,start:'2026-05-08',end:'2026-05-15',title:'Figma workspace & design system setup',status:'upcoming',
    desc:'Set up Figma project after the paper phase and CEO scope sign-off: pages per phase, component library page, design tokens (color, typography, spacing, border radius), naming conventions. Define design principles from the product philosophy: calm over pressure, clarity over completeness, effort is visible, no punishment for inconsistency. This foundation saves time across all remaining weeks.',deps:['ceo-scope']},
-  {id:'wf-hierarchy',lane:'design',row:0,start:'2026-05-16',end:'2026-05-27',title:'Wireframes: core hierarchy (Sections 1–2)',status:'upcoming',
-   desc:'Wireframe Mountain → Ridge → Peak → Cairn → Trail → Step. Camp/Maps view, Peak creation form (4 fields + SMART checklist), Cairn and Step creation. Includes: tags with inheritance visualization, shared Peaks (cross-mountain), Summit and Altitude levels with tooltip, ordering/progression (sequential mode, parallel flag, Skip behavior, "Not Today").',deps:['ceo-scope']},
+  {id:'wf-hierarchy-tracking',lane:'design',row:0,start:'2026-05-08',end:'2026-05-26',title:'Wireframes: hierarchy + tracking types (Sections 1–2)',status:'upcoming',
+   desc:'Two-phase work with an internal checkpoint at May 19. The two phases are entwined in practice — the Peak creation form has a tracking-type field, Camp/Maps cards need visual indicators per tracking type, Step creation needs to know if it\'s time-based or completable. Sketches will jump back and forth. Internal checkpoint (May 19): hierarchy structure locked → tracking type details finalized. Phase 1 (May 8–19): core hierarchy wireframes. Mountain → Ridge → Peak → Cairn → Trail → Step. Camp/Maps view, Peak creation form (4 fields + SMART checklist), Cairn and Step creation. Tags with inheritance visualization, shared Peaks (cross-mountain), Summit and Altitude levels with tooltip, ordering/progression (sequential mode, parallel flag, Skip behavior, "Not Today"). Phase 2 (May 19–26): tracking types & modifiers. All 3 tracking types — Completable (manual done + incomplete Cairns prompt), Numeric Target (cumulative + snapshot modes, unit free-text, tally start), Time-Based (auto-rollup from Steps). All modifiers — Deadline (hard/soft, countdown display, urgency flags), Tally mode, Conditioning toggle.',deps:['ceo-scope']},
   {id:'wf-pack-hike',lane:'design',row:1,start:'2026-05-12',end:'2026-05-26',title:'Wireframes: Pack & Hike (navigation)',status:'upcoming',
-   desc:'Wireframe the Pack tab (Basecamp global view + two-tier Expedition with tactical dividers, Leaf-Node-Only Rule) and Hike tab (Compass daily triage ranked by priority+decay+deadline, Focus Mode execution spotlight). Include collapsible dropdowns for conditioning/trail work/obstacles, fallback state when Expedition is empty.',deps:['wf-hierarchy']},
-  {id:'wf-tracking-types',lane:'design',row:0,start:'2026-05-19',end:'2026-05-26',title:'Wireframes: tracking types & modifiers',status:'upcoming',
-   desc:'Wireframe all 3 tracking types: Completable (manual done + incomplete Cairns prompt), Numeric Target (cumulative + snapshot modes, unit free-text, tally start), Time-Based (auto-rollup from Steps). Wireframe all modifiers: Deadline (hard/soft, countdown display, urgency flags), Tally mode, Conditioning toggle.',deps:['wf-hierarchy']},
+   desc:'Wireframe the Pack tab (Basecamp global view + two-tier Expedition with tactical dividers, Leaf-Node-Only Rule) and Hike tab (Compass daily triage ranked by priority+decay+deadline, Focus Mode execution spotlight). Include collapsible dropdowns for conditioning/trail work/obstacles, fallback state when Expedition is empty.',deps:['wf-hierarchy-tracking']},
   {id:'wf-conditioning',lane:'design',row:0,start:'2026-06-01',end:'2026-06-16',title:'Wireframes: conditioning module (Section 3)',status:'upcoming',
    desc:'Design all 3 conditioning modes. UI for all 4 target types (frequency, per-session duration, per-period duration, count). UI for all 5 end conditions (streak size, successful periods, end date, total duration, total count) — combinable. Streak vs tally dual views. Missed check-in retroactive entry. Pause mechanism (1-week re-pause friction). Link detection.',deps:['ceo-wf-review','eng-conditioning']},
   {id:'wf-trail-obstacles',lane:'design',row:1,start:'2026-06-09',end:'2026-06-20',title:'Wireframes: Trail Work & Obstacles (Sections 4–5)',status:'upcoming',
@@ -510,16 +528,14 @@ const ITEMS = [
    desc:'Final Figma QA: naming conventions, component attachment, flow connections, all 50+ screens accounted for, Dev Mode enabled. Handoff package: Figma file + spec annotation doc (conditioning end-condition logic, blended projection algorithm, leaf-node rule, tiered time distribution, decay cascade) + V2 backlog doc + open questions log.',deps:['design-revisions','eng-handoff']},
 
   // ── RESOURCES & TOOLS ──
-  {id:'figma-sub',lane:'business',row:0,start:'2026-05-12',end:'2026-05-16',title:'💳 Figma Professional subscription',status:'upcoming',
-   desc:'PROCUREMENT NEEDED — after CEO scope sign-off and paper phase. Subscribe to Figma Professional (~$15/mo per editor). Required for: unlimited Figma projects, advanced prototyping (component variants, interactive components, smart animate), Dev Mode for engineering handoff, and shareable prototype links for usability testing. Expense through the startup or ask CEO to add to company card.',deps:['ceo-scope']},
-  {id:'miro-sub',lane:'business',row:1,start:'2026-05-12',end:'2026-05-16',title:'💳 Miro or FigJam (optional)',status:'upcoming',
-   desc:'PROCUREMENT — Optional, after Figma is live. A collaborative whiteboard tool (Miro Starter ~$10/mo or FigJam included with Figma) is useful for user flow mapping sessions with the CEO, affinity mapping after usability testing, and real-time design critiques. FigJam comes free with Figma Professional — recommended as the zero-cost default.',deps:['figma-sub']},
+  {id:'figma-setup-config',lane:'business',row:0,start:'2026-05-05',end:'2026-05-12',title:'💳 Figma Professional: subscribe + configure',status:'upcoming',
+   desc:'Two-phase work with an internal checkpoint at May 8: subscription active. Phase 1 (May 5–8): PROCUREMENT — subscribe to Figma Professional (~$15/mo per editor) after CEO scope sign-off and paper phase. Required for: unlimited Figma projects, advanced prototyping (component variants, interactive components, smart animate), Dev Mode for engineering handoff, and shareable prototype links for usability testing. Expense through the startup or ask CEO to add to company card. Internal checkpoint (May 8): subscription active — credit card / CEO approval secured. Phase 2 (May 8–12): set up project structure once Figma Professional is live. Pages per phase (Discovery / Wireframes / High-Fi / Handoff), shared component library page, reference layer for the prototype export. Add the engineer as a Viewer so the handoff file is accessible from day one. Confirm CEO has view-only access for review sessions.',deps:['ceo-scope']},
+  {id:'miro-sub',lane:'business',row:1,start:'2026-05-05',end:'2026-05-08',title:'💳 Miro or FigJam (optional)',status:'upcoming',
+   desc:'PROCUREMENT — Optional, after Figma is live. A collaborative whiteboard tool (Miro Starter ~$10/mo or FigJam included with Figma) is useful for user flow mapping sessions with the CEO, affinity mapping after usability testing, and real-time design critiques. FigJam comes free with Figma Professional — recommended as the zero-cost default.',deps:['figma-setup-config']},
   {id:'usertesting-tool',lane:'business',row:0,start:'2026-07-21',end:'2026-07-28',title:'💳 Usability testing tool (Maze / Lyssna)',status:'upcoming',
-   desc:'PROCUREMENT NEEDED — Before usability testing in Week 14. Options: Maze (~$99/mo, unmoderated task flows + heatmaps, integrates with Figma), Lyssna (free tier available, good for quick prototype tests), or run moderated sessions via Zoom/Google Meet for free. For a 3-person startup, Zoom + screen share is the lowest-friction option and costs nothing. Recommend Maze only if you need unmoderated async testing at scale.',deps:['figma-sub']},
-  {id:'figma-pro',lane:'business',row:2,start:'2026-05-16',end:'2026-05-19',title:'Figma: project structure & team access',status:'upcoming',
-   desc:'Once Figma Professional is active, set up the full project structure: pages per phase (Discovery / Wireframes / High-Fi / Handoff), a shared component library page, and a reference layer for the prototype export. Add the engineer as a Viewer so the handoff file is accessible from day one. Confirm the CEO has view-only access for review sessions.',deps:['figma-sub']},
+   desc:'PROCUREMENT NEEDED — Before usability testing in Week 14. Options: Maze (~$99/mo, unmoderated task flows + heatmaps, integrates with Figma), Lyssna (free tier available, good for quick prototype tests), or run moderated sessions via Zoom/Google Meet for free. For a 3-person startup, Zoom + screen share is the lowest-friction option and costs nothing. Recommend Maze only if you need unmoderated async testing at scale.',deps:['figma-setup-config']},
   {id:'figma-tokens',lane:'business',row:3,start:'2026-07-07',end:'2026-07-14',title:'Figma: design tokens & component variants',status:'upcoming',
-   desc:'Configure Figma design tokens (color, spacing, border radius, typography scales) and component variants for the high-fi phase. Enables consistent application across all screens and one-change-propagates-everywhere updates. This is a one-time setup that pays significant dividends during high-fi production and any post-usability revisions.',deps:['figma-pro']},
+   desc:'Configure Figma design tokens (color, spacing, border radius, typography scales) and component variants for the high-fi phase. Enables consistent application across all screens and one-change-propagates-everywhere updates. This is a one-time setup that pays significant dividends during high-fi production and any post-usability revisions.',deps:['figma-setup-config']},
   {id:'figma-devmode',lane:'business',row:4,start:'2026-07-21',end:'2026-07-28',title:'Figma: enable Dev Mode for engineer',status:'upcoming',
    desc:'Enable Figma Dev Mode on the handoff file. Verify the engineer can access inspect panels, CSS specs, component measurements, spacing values, and asset exports. Set the correct permission level (Viewer + Dev). Test that component specs render correctly — including auto-layout and constraint settings — before any handoff review sessions.',deps:['figma-tokens']},
   {id:'usability-recruit',lane:'business',row:3,start:'2026-07-28',end:'2026-08-04',title:'Recruit usability test participants',status:'upcoming',
@@ -527,39 +543,26 @@ const ITEMS = [
   {id:'v2-backlog',lane:'business',row:4,start:'2026-08-10',end:'2026-08-14',title:'V2 backlog doc & CEO final sign-off',status:'upcoming',
    desc:'Compile V2 backlog: spaced repetition algorithm, mastery threshold labels (fragile/solid/second nature), multi-step Pomodoro across Steps, auto-dependency detection for Obstacles, any usability findings deferred from V1. Final CEO project sign-off. Engineering handoff complete. Project closes.',deps:['handoff-figma','usability-recruit']},
 
-  // ── THIS WEEK ──
-  {id:'competitive-analysis',lane:'product',row:3,start:'2026-04-21',end:'2026-04-28',title:'Competitive analysis — 5–8 apps',status:'active',
-   desc:'Study 5–8 adjacent apps across three categories: habit trackers (Finch, Habitica, Streaks), goal planners (Structured, Waymap, Longwalks, Dreamfora), time trackers (Toggl, Timestripe, Motion). For each: navigation model, how complexity is handled, time tracking UX, onboarding flow, what they do well and where they fall short. This directly informs V1 decisions — especially navigation concept, Compass, and the timer interaction. Gage already referenced chess.com\'s AI layer as a model; that benchmark applies here too.',deps:[]},
-
   // ── BEFORE DESIGNS START ──
-  {id:'spec-gaps',lane:'product',row:3,start:'2026-05-05',end:'2026-05-16',title:'Answer 8 spec gaps in open_questions.md',status:'upcoming',
-   desc:'Several open questions in open_questions.md are UX decisions that must be resolved before wireframing begins: hard vs. soft deadline UI treatment, dismiss behavior on trail work, planning nudge format (the Sunday prompt), Summit Fever + TreeLine prompt repetition and dismissal logic, Fog exit conditions beyond logging time. Work through each gap, propose a resolution with rationale, and bring the full set to the CEO scope session. Spec is considered incomplete until these are closed.',deps:['spec-audit']},
 
   // ── LONGER HORIZON: USER RESEARCH ──
   {id:'user-interviews',lane:'product',row:4,start:'2026-05-08',end:'2026-05-22',title:'User research interviews (Skill Builders first)',status:'upcoming',
    desc:'Conduct 5–8 user research interviews. Start with Skill Builders (musicians, athletes, language learners), then Structure Seekers and Capacity Planners. Core question: understand the "overwhelming" emotional arc — when do users give up on tracking apps, what makes them feel in control vs. anxious, what does "I moved the needle today" feel like. Also probe: what apps they currently use, what they hate about them, and what would make them open Treeline on day 3. Feeds the affinity map, persona validation, and journey maps.',deps:['ceo-scope']},
   {id:'affinity-map',lane:'product',row:4,start:'2026-05-22',end:'2026-05-29',title:'Affinity map from user interviews',status:'upcoming',
    desc:'Synthesize interview findings into an affinity map. Group observations by theme: moments of overwhelm, motivation triggers, how users currently track goals, where existing apps lose them. Use FigJam (free with Figma Professional). The affinity map should produce 5–8 insight clusters that directly challenge or confirm the spec\'s assumptions — especially around the Compass daily flow and the hierarchy complexity.',deps:['user-interviews']},
-  {id:'validate-personas',lane:'product',row:5,start:'2026-05-22',end:'2026-05-29',title:'Validate and sharpen 3 personas',status:'upcoming',
-   desc:'Cross-reference the 3 spec personas (Skill Builder / Structure Seeker / Capacity Planner) against real interview data. Sharpen each with actual behavioral patterns, not assumptions. Key outputs per persona: what triggers them to open the app, what frustrates them within 3 days (Gage\'s 77% churn stat), what "success" looks like to them, and which spec features matter most vs. which they\'d ignore. These become the design decision filter for every screen.',deps:['affinity-map']},
-  {id:'jtbd-per-persona',lane:'product',row:4,start:'2026-05-29',end:'2026-06-09',title:'Jobs to be Done per persona',status:'upcoming',
-   desc:'Write one core JTBD statement per persona in the format: "When [situation], I want to [motivation], so I can [expected outcome]." Example for Skill Builder: "When I sit down to practice guitar, I want to know exactly what to work on, so I can feel like I made real progress and not just filled time." These statements become the north star for every screen decision. If a design doesn\'t serve the JTBD, it\'s cut.',deps:['validate-personas']},
+  {id:'personas-jtbd',lane:'product',row:5,start:'2026-05-22',end:'2026-06-09',title:'Sharpen personas + write JTBD per persona',status:'upcoming',
+   desc:'Two-phase work with an internal checkpoint at May 29. Phase 1 (May 22–29): validate and sharpen personas. Cross-reference the 3 spec personas (Skill Builder / Structure Seeker / Capacity Planner) against real interview data. Sharpen each with actual behavioral patterns, not assumptions. Key outputs per persona: what triggers them to open the app, what frustrates them within 3 days (Gage\'s 77% churn stat), what success looks like to them, which spec features matter most vs. which they\'d ignore. Internal checkpoint (May 29): persona profiles locked — do not move to Phase 2 until each profile is sharp enough that a JTBD can be written without hand-waving. Phase 2 (May 29–Jun 9): write Jobs-to-Be-Done per persona. Write one core JTBD statement per persona in the format: "When [situation], I want to [motivation], so I can [expected outcome]." Example for Skill Builder: "When I sit down to practice guitar, I want to know exactly what to work on, so I can feel like I made real progress and not just filled time." Required deliverable: 3 written JTBD statements (not optional). These become the north star for every screen decision — if a design doesn\'t serve the JTBD, it\'s cut.',deps:['affinity-map']},
   {id:'journey-maps',lane:'product',row:5,start:'2026-05-29',end:'2026-06-12',title:'Journey map per persona (emotional arc)',status:'upcoming',
-   desc:'Map the end-to-end emotional journey for each persona: first open → onboarding → first session → week 1 → week 3 (the churn moment Gage flagged). Focus on the emotional arc — specifically the "overwhelming" problem. Mark where users feel: clarity, momentum, confusion, anxiety, defeat, re-engagement. These maps identify exactly which screens carry the most emotional weight and need the most design attention. Gage\'s future animation moments should map directly onto the high-intensity emotional peaks here.',deps:['jtbd-per-persona']},
+   desc:'Map the end-to-end emotional journey for each persona: first open → onboarding → first session → week 1 → week 3 (the churn moment Gage flagged). Focus on the emotional arc — specifically the "overwhelming" problem. Mark where users feel: clarity, momentum, confusion, anxiety, defeat, re-engagement. These maps identify exactly which screens carry the most emotional weight and need the most design attention. Gage\'s future animation moments should map directly onto the high-intensity emotional peaks here.',deps:['personas-jtbd']},
   {id:'app-map',lane:'product',row:5,start:'2026-05-08',end:'2026-05-19',title:'App map + content inventory',status:'upcoming',
-   desc:'Build a full app map: every screen, every connection, every modal and state. Goes deeper than the screen inventory — maps content types per screen (labels, inputs, actions, system messages) and shows how information flows between screens. Useful for identifying nav dead-ends, content redundancy, and missing transitions before wireframes begin. Run this in parallel with early wireframes so discoveries can immediately inform the design.',deps:['screen-inventory','ceo-scope']},
+   desc:'Build a full app map: every screen, every connection, every modal and state. Goes deeper than the screen inventory — maps content types per screen (labels, inputs, actions, system messages) and shows how information flows between screens. Useful for identifying nav dead-ends, content redundancy, and missing transitions before wireframes begin. Run this in parallel with early wireframes so discoveries can immediately inform the design.',deps:['ceo-scope-prep','ceo-scope']},
   {id:'card-sort',lane:'product',row:6,start:'2026-05-19',end:'2026-05-29',title:'Card sort on the core hierarchy',status:'upcoming',
    desc:'Run a card sort (open or hybrid) with 5–8 users on the core hierarchy terms and concepts: Mountains, Peaks, Cairns (or whatever they\'re renamed to), Steps, Conditioning, Trail Work, Basecamp, Expedition, Compass. Goal: validate that the mental model matches user expectations — especially after any naming changes from the CEO scope session. Clare\'s Miles/Markers proposal in particular needs this validation. Use FigJam or Maze for remote card sorting.',deps:['app-map','validate-personas']},
-  {id:'map-critical-flows',lane:'product',row:6,start:'2026-05-08',end:'2026-05-22',title:'Map 5 critical user flows',status:'upcoming',
-   desc:'Document the 5 highest-frequency flows in full detail before wireframing begins: (1) First-time onboarding → first mountain created, (2) Daily Compass triage → start timer → log time → complete step, (3) Add peak to Expedition → commit hours, (4) Complete a step → advance hiker, (5) Check Reflect → review week. Each flow gets a step-by-step screen sequence with decision branches. These drive wireframe sequencing and gate nothing — run in parallel with early wireframes.',deps:['app-map','user-flows']},
-
   // ── GAGE HANDOFF ──
-  {id:'gage-moments',lane:'design',row:2,start:'2026-07-07',end:'2026-07-17',title:'Gage handoff: identify animation moments',status:'upcoming',
-   desc:'During high-fidelity design, identify all Gage-owned animation and 3D moments in the product. From the April 16 call: completion pop-ups, psychological state transitions (TreeLine / Summit Fever / Fog), onboarding experience, Waypoint reached celebration, Peak completion reward. Mark each in Figma with a "Gage moment" annotation and a rough timing estimate. This list gates the creative brief writing and gives Gage early visibility into the scope of animation work.',deps:['hifi-components']},
-  {id:'gage-briefs',lane:'design',row:3,start:'2026-07-14',end:'2026-07-21',title:'Gage handoff: write creative briefs',status:'upcoming',
-   desc:'For each Gage-owned animation moment, write a creative brief: (1) What should the user feel at this exact moment? (2) What is the interaction trigger — what action fires it? (3) How long should it last — must never slow down task flow. (4) What is the visual context — what screen state is it layered on top of? Briefs should be non-prescriptive about motion style (Gage owns that) but precise about the emotional goal and timing constraints. Share with Gage alongside the high-fi screens.',deps:['gage-moments']},
+  {id:'gage-moments-briefs',lane:'design',row:2,start:'2026-07-07',end:'2026-07-21',title:'Gage handoff: identify moments + write briefs',status:'upcoming',
+   desc:'Two-phase work with an internal Gage scope-share at Jul 14. Phase 1 (Jul 7–14): identify all Gage-owned animation and 3D moments during high-fidelity design. From the April 16 call: completion pop-ups, psychological state transitions (TreeLine / Summit Fever / Fog), onboarding experience, Waypoint reached celebration, Peak completion reward. Mark each in Figma with a "Gage moment" annotation and a rough timing estimate. Internal scope-share (Jul 14): hand the annotated moments list to Gage for early visibility — gives him a week to think about animation approach and push back on scope before briefs lock things down. Phase 2 (Jul 14–21): write a creative brief for each moment — (1) what should the user feel? (2) what is the interaction trigger? (3) how long should it last (must never slow down task flow)? (4) what is the visual context? Briefs are non-prescriptive about motion style (Gage owns that) but precise about emotional goal and timing constraints. Share final briefs with Gage alongside the high-fi screens.',deps:['hifi-components']},
   {id:'gage-share',lane:'design',row:2,start:'2026-07-21',end:'2026-07-28',title:'Gage handoff: share high-fi screens with Gage',status:'upcoming',
-   desc:'Share complete high-fidelity screens with Gage before he begins animating, so he has full visual context. Include: Figma file access, component specs, color tokens, the creative briefs, and a recorded prototype walkthrough. Gage should understand the product deeply enough that his animations feel like they emerged from the design — not layered on top of it. This was the agreed phase ordering from the April 16 call: UX + UI first, then Gage.',deps:['gage-briefs','hifi-camp']},
+   desc:'Share complete high-fidelity screens with Gage before he begins animating, so he has full visual context. Include: Figma file access, component specs, color tokens, the creative briefs, and a recorded prototype walkthrough. Gage should understand the product deeply enough that his animations feel like they emerged from the design — not layered on top of it. This was the agreed phase ordering from the April 16 call: UX + UI first, then Gage.',deps:['gage-moments-briefs','hifi-camp']},
   {id:'gage-integrate',lane:'design',row:3,start:'2026-08-04',end:'2026-08-10',title:'Gage handoff: integrate animations into prototype',status:'upcoming',
    desc:'Review Gage\'s completed animations and integrate them back into the Figma prototype (or handoff file) for final usability testing. Check: timing feels right in context, animations don\'t block task flow, psychological state moments don\'t feel punishing, Waypoint and Peak completion moments feel earned and proportional. Flag any that need revision before the final CEO review. The integrated prototype is what participants see in second-round usability testing.',deps:['gage-share','hifi-edge-states']},
 
@@ -585,14 +588,14 @@ const ITEMS = [
   {id:'help-hifi-production',lane:'milestone',row:2,start:'2026-07-07',end:'2026-07-28',title:'⚡ High-fi push — consider design contractor',status:'upcoming',
    desc:'50+ screens in high-fidelity is a significant production load for a single designer alongside Gage coordination, prototype syncs with Slawek, and usability test prep. If pace is slower than expected coming out of wireframes, this is the moment to bring in a design contractor for 2–3 weeks to handle the more mechanical screens (form states, empty states, error states) while you focus on the core loop screens and Gage handoff. Raise this with Chris at the wireframes freeze milestone if needed.'},
 
-  // ── CLARE REVIEWS (embedded in UX Design lane) ──
-  {id:'claire-1',lane:'design',row:3,barClass:'claire',start:'2026-05-12',end:'2026-05-14',title:'👁 Clare: validate hierarchy before CEO scope',status:'upcoming',
-   desc:'Clare proposed collapsing the hierarchy to Miles / Markers / Mountains (April 14 call) and has the clearest outside-eye on whether the simplification is working. Before the CEO scope session locks in naming and structure, share the paper sketches and naming alternatives with Clare. Specifically: does the simplified hierarchy hold up across all 4 user types? Does the mountain progress visualization sketch make spatial sense? Clare is an architect — spatial and structural logic is exactly her lens. This is a 30-min call or async review, not a full session.',deps:['paper-mountain-viz','naming-resolution']},
-  {id:'claire-2',lane:'design',row:3,barClass:'claire',start:'2026-05-26',end:'2026-05-29',title:'👁 Clare: wireframe review — core flows',status:'upcoming',
-   desc:'Clare reviews the completed Camp, Pack, and Hike wireframes before the CEO wireframe review. Focus: does the information flow feel logical to someone who thinks spatially? Is the Compass screen answering "what should I do now?" without requiring the user to think? Does the two-tier Expedition (strategic + tactical) feel manageable or overwhelming? Clare\'s April 14 feedback flagged the absence of a "moved the needle" feeling — check whether the wireframes address this. Clare brings a different lens than Chris and will catch things a founder might miss.',deps:['wf-pack-hike','wf-tracking-types']},
-  {id:'claire-3',lane:'design',row:3,barClass:'claire',start:'2026-06-27',end:'2026-06-30',title:'👁 Clare: feature check — mobile UX',status:'upcoming',
+  // ── CLARE REVIEWS ──
+  {id:'claire-1',lane:'claire',row:0,start:'2026-05-05',end:'2026-05-07',title:'Clare: validate hierarchy proposal before CEO scope',status:'upcoming',
+   desc:'Clare proposed collapsing the hierarchy to Miles / Markers / Mountains (April 14 call) and has the clearest outside-eye on whether the simplification is working. Before the CEO scope session locks in naming and structure, share the paper sketches and naming alternatives with Clare. Specifically: does the simplified hierarchy hold up across all 4 user types? Does the mountain progress visualization sketch make spatial sense? Clare is an architect — spatial and structural logic is exactly her lens. This is a 30-min call or async review, not a full session.',deps:['paper-phase','ceo-scope-prep']},
+  {id:'claire-2',lane:'claire',row:0,start:'2026-05-26',end:'2026-05-29',title:'Clare: wireframe review — core flows',status:'upcoming',
+   desc:'Clare reviews the completed Camp, Pack, and Hike wireframes before the CEO wireframe review. Focus: does the information flow feel logical to someone who thinks spatially? Is the Compass screen answering "what should I do now?" without requiring the user to think? Does the two-tier Expedition (strategic + tactical) feel manageable or overwhelming? Clare\'s April 14 feedback flagged the absence of a "moved the needle" feeling — check whether the wireframes address this. Clare brings a different lens than Chris and will catch things a founder might miss.',deps:['wf-pack-hike','wf-hierarchy-tracking']},
+  {id:'claire-3',lane:'claire',row:0,start:'2026-06-27',end:'2026-06-30',title:'Clare: feature wireframe check — mobile UX',status:'upcoming',
    desc:'Clare reviews the conditioning, prioritization, and capacity planning wireframes specifically through a mobile UX lens. These are the densest feature areas in the spec and the most likely to feel overwhelming on a small screen. Clare\'s concern from the April 14 call was that the system must be simple for the user despite its complexity — check whether the progressive disclosure approach is actually working in the wireframes, or whether it\'s just moving complexity to the second tap. A 45-min session.',deps:['wf-conditioning','wf-prioritization']},
-  {id:'claire-4',lane:'design',row:3,barClass:'claire',start:'2026-07-03',end:'2026-07-07',title:'👁 Clare: sign off before high-fi begins',status:'upcoming',
+  {id:'claire-4',lane:'claire',row:0,start:'2026-07-03',end:'2026-07-07',title:'Clare: sign off before high-fi begins',status:'upcoming',
    desc:'Final Clare checkpoint before the design moves into high-fidelity production. Once high-fi begins, structural changes become expensive. Clare does a last structural pass: are all the flows complete and logical? Does the app map make sense end-to-end? Is there anything that feels architecturally wrong that hasn\'t been caught yet? This is also the moment to share Gage\'s creative briefs with Clare — she should understand what the emotional high points of the product will be before they\'re built.',deps:['wf-waypoints-decay','claire-3']},
 ];
 
@@ -606,54 +609,88 @@ function formatShortDate(d){return parseLocal(d).toLocaleDateString('en-US',{mon
 function xFromDate(s){return daysBetween(TIMELINE_START,s)*PX_PER_DAY}
 function widthFromDates(s,e){return Math.max(daysBetween(s,e)*PX_PER_DAY,30)}
 
-function renderWeeks(){
+function renderMonths(){
   const strip=document.getElementById('monthsStrip');
-  const wWidth=7*PX_PER_DAY;
-  let wStart=new Date(TIMELINE_START);
-  let wNum=1;
-  while(wStart<GRID_END){
-    const wEnd=new Date(wStart.getTime()+7*86400000);
-    const isNow=TODAY>=wStart&&TODAY<wEnd;
-    const isPast=wEnd<=TODAY;
+  let d=new Date(TIMELINE_START);
+  while(d<GRID_END){
+    const nm=new Date(d.getFullYear(),d.getMonth()+1,1);
+    const days=daysBetween(d.toISOString().slice(0,10),nm.toISOString().slice(0,10));
+    const w=days*PX_PER_DAY;
+    const key=d.toISOString().slice(0,7);
+    const isNow=d.getFullYear()===TODAY.getFullYear()&&d.getMonth()===TODAY.getMonth();
+    const isPast=d<new Date(TODAY.getFullYear(),TODAY.getMonth(),1);
     const cls=isNow?'now':isPast?'past':'';
-    const monthLabel=wStart.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+    const label=d.toLocaleDateString('en-US',{month:'short',year:'2-digit'});
+    const phase=PHASE_MAP[key]||'';
     const el=document.createElement('div');
-    el.className=`month-marker ${cls}`;
-    el.style.width=wWidth+'px';
-    el.style.flexShrink='0';
-    el.innerHTML=`<span style="font-weight:800;font-size:11px">W${wNum}</span><span class="phase-tag" style="font-size:9px;margin-left:2px">${monthLabel}</span>`;
-    strip.appendChild(el);
-    wStart=wEnd;
-    wNum++;
+    el.className=`month-marker ${cls}`;el.style.width=w+'px';
+    el.innerHTML=label+(phase?`<span class="phase-tag">${phase}</span>`:'');
+    strip.appendChild(el);d=nm;
   }
+}
+
+function packRows(items){
+  const sorted=[...items].sort((a,b)=>parseLocal(a.start)-parseLocal(b.start));
+  const rowItems={};
+  sorted.forEach(it=>{
+    let r=0;
+    const overlaps=other=>parseLocal(it.start)<parseLocal(other.end)&&parseLocal(other.start)<parseLocal(it.end);
+    while(rowItems[r]&&rowItems[r].some(overlaps))r++;
+    it._layoutRow=r;
+    (rowItems[r]=rowItems[r]||[]).push(it);
+  });
 }
 
 function renderLanes(){
   const container=document.getElementById('lanes');
   LANES.forEach(lane=>{
     const items=ITEMS.filter(i=>i.lane===lane.id&&parseLocal(i.start)<TIMELINE_END);
-    const maxRow=items.reduce((m,i)=>Math.max(m,i.row),0);
-    const trackH=(maxRow+1)*(34+28)+32;
-    const laneEl=document.createElement('div');laneEl.className='lane';
+    packRows(items);
+    const maxRow=items.reduce((m,i)=>Math.max(m,i._layoutRow),0);
+    const trackH=(maxRow+1)*(50+28)+32;
+    const laneEl=document.createElement('div');laneEl.className='lane';laneEl.setAttribute('data-lane',lane.id);
     const labelEl=document.createElement('div');labelEl.className=`lane-label ${lane.css}`;
     labelEl.innerHTML=`<span class="lane-icon">${lane.icon}</span><span class="lane-name">${lane.label.replace('\n','<br>')}</span>`;
     laneEl.appendChild(labelEl);
     const trackEl=document.createElement('div');trackEl.className='track';trackEl.style.minHeight=trackH+'px';trackEl.setAttribute('data-lane',lane.id);
     const gridEl=document.createElement('div');gridEl.className='gridlines';
-    for(let w=0;w<=24;w++){const gd=new Date(TIMELINE_START.getTime()+w*7*86400000);if(gd>GRID_END)break;const gl=document.createElement('div');gl.className='gridline';gl.style.left=(w*7*PX_PER_DAY)+'px';gridEl.appendChild(gl);}
+    let d=new Date(TIMELINE_START);
+    while(d<GRID_END){d=new Date(d.getFullYear(),d.getMonth()+1,1);const gl=document.createElement('div');gl.className='gridline';gl.style.left=xFromDate(d.toISOString().slice(0,10))+'px';gridEl.appendChild(gl);}
     trackEl.appendChild(gridEl);
     const nl=document.createElement('div');nl.className='now-line';nl.style.left=xFromDate(TODAY.toISOString().slice(0,10))+'px';trackEl.appendChild(nl);
     items.forEach(item=>{
       const group=document.createElement('div');group.className='bar-group';
       group.style.left=xFromDate(item.start)+'px';group.style.width=widthFromDates(item.start,item.end)+'px';
-      group.style.top=(16+item.row*62)+'px';group.setAttribute('data-id',item.id);
-      const bar=document.createElement('div');bar.className=`bar ${item.barClass||lane.id} ${item.status}`;bar.textContent=item.title;bar.onclick=()=>selectBar(item.id);
+      group.style.top=(16+item._layoutRow*78)+'px';group.setAttribute('data-id',item.id);
+      const bar=document.createElement('div');bar.className=`bar ${lane.id} ${item.status}`;bar.onclick=()=>selectBar(item.id);
+      const txt=document.createElement('span');txt.className='bar-text';txt.textContent=item.title;bar.appendChild(txt);
       group.appendChild(bar);
       if(item.audience){const badge=document.createElement('span');badge.className=`bar-audience ${item.audience}`;badge.textContent=item.audience==='both'?'Both':item.audience==='founder'?'Founder':'Team';group.appendChild(badge);}
       const dates=document.createElement('div');dates.className='bar-dates';dates.innerHTML=`<span>${formatShortDate(item.start)}</span><span>${formatShortDate(item.end)}</span>`;group.appendChild(dates);
       trackEl.appendChild(group);
     });
     laneEl.appendChild(trackEl);container.appendChild(laneEl);
+  });
+  hideAdjacentDateLabels();
+}
+
+function hideAdjacentDateLabels(){
+  const byKey={};
+  ITEMS.forEach(item=>{
+    if(parseLocal(item.start)>=TIMELINE_END)return;
+    if(item._layoutRow==null)return;
+    const k=`${item.lane}-${item._layoutRow}`;
+    (byKey[k]=byKey[k]||[]).push(item);
+  });
+  Object.values(byKey).forEach(arr=>{
+    arr.sort((a,b)=>parseLocal(a.start)-parseLocal(b.start));
+    for(let i=0;i<arr.length-1;i++){
+      const gap=(parseLocal(arr[i+1].start)-parseLocal(arr[i].end))/86400000;
+      if(gap<=1){
+        const g=document.querySelector(`.bar-group[data-id="${arr[i].id}"]`);
+        if(g){const spans=g.querySelectorAll('.bar-dates span');if(spans[1])spans[1].style.visibility='hidden';}
+      }
+    }
   });
 }
 
@@ -668,9 +705,9 @@ function renderDeps(){
       const fromGroup=document.querySelector(`.bar-group[data-id="${depId}"]`);if(!fromGroup)return;
       const fromTrack=fromGroup.closest('.track');
       const fromRight=parseFloat(fromGroup.style.left)+parseFloat(fromGroup.style.width)+160;
-      const fromCy=fromTrack.offsetTop+parseFloat(fromGroup.style.top)+17;
+      const fromCy=fromTrack.offsetTop+parseFloat(fromGroup.style.top)+25;
       const toLeft=parseFloat(toGroup.style.left)+160;
-      const toCy=toTrack.offsetTop+parseFloat(toGroup.style.top)+17;
+      const toCy=toTrack.offsetTop+parseFloat(toGroup.style.top)+25;
       const midX=fromRight+(toLeft-fromRight)*.5;
       const path=document.createElementNS('http://www.w3.org/2000/svg','path');
       path.setAttribute('d',`M ${fromRight} ${fromCy} C ${midX} ${fromCy}, ${midX} ${toCy}, ${toLeft} ${toCy}`);
@@ -690,7 +727,7 @@ function selectBar(id){
   document.getElementById('detailStart').value=item.start;document.getElementById('detailEnd').value=item.end;
   const sEl=document.getElementById('detailStatus');sEl.textContent=item.status==='done'?'Complete':item.status==='active'?'In Progress':'Upcoming';sEl.className=`detail-status ${item.status}`;
   document.querySelectorAll('.audience-btn').forEach(btn=>{btn.className='audience-btn';if(item.audience&&btn.textContent.toLowerCase()===item.audience)btn.classList.add(`active-${item.audience}`);});
-  document.getElementById('detailDesc').textContent=item.desc;
+  const descEl=document.getElementById('detailDesc');descEl.innerHTML='';const ul=document.createElement('ul');const sentences=(item.desc.match(/[^.!?]+[.!?]+/g)||[item.desc]).map(s=>s.trim()).filter(Boolean);sentences.forEach(s=>{const li=document.createElement('li');li.textContent=s;ul.appendChild(li);});descEl.appendChild(ul);
   const depsEl=document.getElementById('detailDeps');
   const dn=(item.deps||[]).map(did=>{const dep=ITEMS.find(i=>i.id===did);return dep?dep.title:did;});
   const bn=ITEMS.filter(i=>(i.deps||[]).includes(id)).map(i=>i.title);
@@ -699,8 +736,9 @@ function selectBar(id){
   renderDepDropdown(item,id);renderTags(item);hideDeleteConfirm();
   const isOnDeck=parseLocal(item.start)>=TIMELINE_END;
   document.getElementById('moveToTimelineBtn').classList.toggle('show',isOnDeck);document.getElementById('moveToOnDeckBtn').classList.toggle('show',!isOnDeck);
+  alignPanelTop();
   document.getElementById('detailPanel').classList.add('open');
-  setTimeout(()=>{document.getElementById('detailPanel').scrollIntoView({behavior:'smooth',block:'start'});},100);
+  document.body.classList.add('detail-open');
 }
 
 let pendingDeps=new Set();
@@ -740,12 +778,12 @@ function moveToOnDeck(){if(!selectedId)return;const item=ITEMS.find(i=>i.id===se
 function showDeleteConfirm(){document.getElementById('deleteBtn').style.display='none';document.getElementById('deleteConfirm').classList.add('show');document.getElementById('deleteCancel').classList.add('show');}
 function hideDeleteConfirm(){document.getElementById('deleteBtn').style.display='';document.getElementById('deleteConfirm').classList.remove('show');document.getElementById('deleteCancel').classList.remove('show');}
 function deleteItem(){if(!selectedId)return;const idx=ITEMS.findIndex(i=>i.id===selectedId);if(idx===-1)return;const id=selectedId;ITEMS.splice(idx,1);ITEMS.forEach(i=>{if(i.deps)i.deps=i.deps.filter(d=>d!==id);});const group=document.querySelector(`.bar-group[data-id="${id}"]`);if(group)group.remove();document.querySelectorAll('.dep-svg path').forEach(p=>p.remove());renderDeps();saveDeleted(id);saveState();closeDetail();}
-function closeDetail(){document.getElementById('detailPanel').classList.remove('open');document.querySelectorAll('.bar.selected').forEach(b=>b.classList.remove('selected'));document.getElementById('depSaveBtn').classList.remove('visible');document.querySelectorAll('.dep-svg path.highlight').forEach(p=>{p.classList.remove('highlight');p.setAttribute('marker-end','url(#arrowhead)');});selectedId=null;}
+function closeDetail(){document.getElementById('detailPanel').classList.remove('open');document.body.classList.remove('detail-open');document.querySelectorAll('.bar.selected').forEach(b=>b.classList.remove('selected'));document.getElementById('depSaveBtn').classList.remove('visible');document.querySelectorAll('.dep-svg path.highlight').forEach(p=>{p.classList.remove('highlight');p.setAttribute('marker-end','url(#arrowhead)');});selectedId=null;}
 document.addEventListener('click',e=>{const wrap=document.querySelector('.dep-dropdown-wrap');if(wrap&&!wrap.contains(e.target)){document.getElementById('depTrigger').classList.remove('open');document.getElementById('depDropdownList').classList.remove('open');}});
 function openAddModal(){const today=new Date();const end=new Date(today);end.setDate(end.getDate()+14);document.getElementById('addTitle').value='';document.getElementById('addDesc').value='';document.getElementById('addLane').value='design';document.getElementById('addStatus').value='upcoming';document.getElementById('addStart').value=today.toISOString().slice(0,10);document.getElementById('addEnd').value=end.toISOString().slice(0,10);document.getElementById('addModal').classList.add('show');}
 function closeAddModal(){document.getElementById('addModal').classList.remove('show');}
 function createItem(){const title=document.getElementById('addTitle').value.trim();if(!title){document.getElementById('addTitle').focus();return;}const lane=document.getElementById('addLane').value;const status=document.getElementById('addStatus').value;const start=document.getElementById('addStart').value;const end=document.getElementById('addEnd').value;const desc=document.getElementById('addDesc').value.trim();if(!start||!end)return;const id=title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'')+'-'+Date.now().toString(36);const startD=parseLocal(start),endD=parseLocal(end);const overlapping=ITEMS.filter(i=>i.lane===lane&&parseLocal(i.start)<endD&&parseLocal(i.end)>startD);const maxRow=overlapping.reduce((mx,i)=>Math.max(mx,i.row||0),-1);const row=maxRow+1;const item={id,lane,row,start,end,title,status,desc:desc||'',deps:[]};ITEMS.push(item);SOURCE_DATES[id]={start,end,_userCreated:true};saveState();closeAddModal();reRender();setTimeout(()=>selectBar(id),100);}
-function reRender(){document.getElementById('lanes').innerHTML='';document.getElementById('monthsStrip').innerHTML='';document.getElementById('onDeckGrid').innerHTML='';document.getElementById('depSvg').querySelectorAll('path').forEach(p=>p.remove());renderWeeks();renderLanes();renderOnDeck();renderDeps();}
+function reRender(){document.getElementById('lanes').innerHTML='';document.getElementById('monthsStrip').innerHTML='';document.getElementById('onDeckGrid').innerHTML='';document.getElementById('depSvg').querySelectorAll('path').forEach(p=>p.remove());renderMonths();renderLanes();renderOnDeck();renderDeps();}
 document.getElementById('addModal').addEventListener('click',function(e){if(e.target===this)closeAddModal();});
 
 const STORAGE_EDITS='treeline-rm-edits';const STORAGE_DELETED='treeline-rm-deleted';const STORAGE_ADDED='treeline-rm-added';
@@ -766,7 +804,7 @@ function renderOnDeck(){
   if(futureItems.length===0)document.getElementById('onDeck').style.display='none';
 }
 
-renderWeeks();renderLanes();renderDeps();renderOnDeck();
+renderMonths();renderLanes();renderDeps();renderOnDeck();
 
 // ── WEEKLY BREAKDOWN ──────────────────────────────────────────
 
@@ -896,10 +934,41 @@ function showWeek(w){
 
 function selectAndScroll(id){
   selectBar(id);
-  document.getElementById('detailPanel').scrollIntoView({behavior:'smooth',block:'start'});
 }
 
 renderWeekBreakdown();
+
+function filterLane(filter){
+  document.querySelectorAll('.lane-filter-pill').forEach(p=>p.classList.toggle('active',p.dataset.filter===filter));
+  const gantt=document.getElementById('gantt');
+  if(filter==='all')gantt.removeAttribute('data-active-filter');
+  else gantt.setAttribute('data-active-filter',filter);
+  alignPanelTop();
+}
+
+function alignPanelTop(){
+  const ref=document.getElementById('weekBreakdown');
+  if(!ref)return;
+  const rect=ref.getBoundingClientRect();
+  document.documentElement.style.setProperty('--panel-top',(rect.top+window.scrollY)+'px');
+  document.documentElement.style.setProperty('--panel-height',rect.height+'px');
+}
+alignPanelTop();
+window.addEventListener('resize',alignPanelTop);
+window.addEventListener('load',alignPanelTop);
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(alignPanelTop);
+
+// Live-reload: poll Last-Modified, reload on change. Localhost only.
+if(location.hostname==='localhost'||location.hostname==='127.0.0.1'){
+  setInterval(async()=>{
+    try{
+      const r=await fetch(location.pathname,{method:'HEAD',cache:'no-store'});
+      const lm=r.headers.get('last-modified');
+      if(window._lastMod&&window._lastMod!==lm)location.reload();
+      window._lastMod=lm;
+    }catch(e){}
+  },800);
+}
 </script>
 </body>
 </html>
